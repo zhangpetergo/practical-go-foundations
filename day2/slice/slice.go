@@ -54,7 +54,8 @@ func median(values []float64) (float64, error) {
 	nums := make([]float64, len(values))
 	copy(nums, values)
 	sort.Float64s(nums)
-	i := len(nums) / 2
+	n := 2
+	i := len(nums) / n
 	if len(nums)%2 == 1 {
 		return nums[i], nil
 	} else {
