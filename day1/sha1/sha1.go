@@ -11,12 +11,12 @@ import (
 )
 
 func main() {
-	sig, err := sha1Sum("functions/sha1/http.log.gz")
+	sig, err := sha1Sum("day1/sha1/http.log.gz")
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("sig: %v\n", sig)
-	sig, err = sha1Sum("functions/sha1/sha1.go")
+	sig, err = sha1Sum("day1/sha1/sha1.go")
 	if err != nil {
 		log.Fatal(err)
 	}
