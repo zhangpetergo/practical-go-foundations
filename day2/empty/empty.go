@@ -36,6 +36,15 @@ func main() {
 // 泛型
 // generics
 
+type Number interface {
+	int | float64
+}
+
+// wo can use that
+// func max[T Number](nums []T) T {
+
+// }
+
 func max[T int | float64](nums []T) T {
 	if len(nums) == 0 {
 		return 0
