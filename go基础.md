@@ -165,17 +165,361 @@ gzip
 
 
 
-捕获panic
+### Slice
 
-> 当我们不想程序随着恐慌而崩溃
+左闭右开
+
+下标（1-2）
+
+s4 = s4[1:3]
+
+
+
+默认下限是0，我们通过这种方式改变slice的len
+
+> s4 = s4[:5]        
+>
+> s4 = s4[0:5]
+
+
+
+默认上限是cap(s4)
+
+> s4 = s4[1:]
+>
+> s4 = s4[1:cap(s4)]
+
+
 
 ```go
-defer func() {
-		if e := recover(); e != nil {
-			log.Println("Error", e)
-			err = fmt.Errorf("%v", e)
-		}
-}()
+	s4 := make([]int, 4, 6)
+	fmt.Printf("s4: len(%d) cap(%d)\n", len(s4), cap(s4))
+
+	s4 = s4[:5]
+	fmt.Printf("s4: len(%d) cap(%d)\n", len(s4), cap(s4))
 ```
 
-使用内置的recover，同时日志输出error
+
+
+
+
+连接两个slice
+
+> 我们可以使用append(s1,s2...)
+
+```go
+func concat(s1, s2 []string) []string {
+	s := make([]string, len(s1)+len(s2)+1)
+	copy(s[:len(s1)], s1)
+	copy(s[len(s1):], s2)
+	// s3 := append(s1, s2...)
+	return s
+}
+```
+
+
+
+
+
+> copy返回的两个slice的指针地址不同
+
+
+
+
+
+一般函数内的变量都被分配在栈上，但是在go里面这个不会。
+
+> go会对变量做逃逸分析，将这个变量分配在heap（堆）上
+
+> go build -gcflags=-m
+>
+> 让go编译器解释下他正在做什么
+
+
+
+
+
+
+
+### 结构体、method、interface
+
+> 像Java、C++中的构造器一样
+>
+> Go默认使用NewXxx构建一个新的结构体
+
+
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var i1 Item
+	fmt.Println(i1)
+	fmt.Printf("%#v", i1)
+}
+
+// 一般栈中的变量都是在方法用完，自动回收的
+// 这里我们返回了一个以后还要用的变量
+// Go会对这个做"逃逸分析"，将我们的变量分配到堆中
+func NewItem(x, y int) (*Item, error) {
+	if x < 0 || x > maxX || y < 0 || y > maxY {
+		return nil, fmt.Errorf("%d,%d out of bound %d,%d", x, y, maxX, maxY)
+	}
+	i := Item{x, y}
+	// i := ItemErrorf()
+	// 	X: x,
+	// 	Y: y,
+	// }
+	return &i, nil
+}
+
+const (
+	maxX = 1000
+	maxY = 600
+)
+
+type Item struct {
+	X int
+	Y int
+}
+```
+
+
+
+
+
+### 结构体嵌入类型的选择
+
+```go
+type Player struct{
+	Name string
+	X int
+	Item 
+}
+
+type Item struct{
+	X int
+	Y int
+}
+
+func main(){
+	p1 := Player{"Jack",100,Item{500,300}}
+	// 这两个是不冲突的
+	// 当我们使用p1.X，他自然知道是外面的X
+	fmt.Printf("p1: %#v",p1.X)
+	fmt.Printf("p1: %#v",p1.Item.X)
+}
+```
+
+冲突的版本
+
+```go
+type Player struct{
+	Name string
+	T
+	Item 
+}
+
+type Item struct{
+	X int
+	Y int
+}
+type T struct{
+	X int
+}
+
+func main(){
+	p1 := Player{"Jack",100,Item{500,300}}
+	// p1.X会引发冲突，因为编译器不知道想要的是哪个里面的X
+	fmt.Printf("p1: %#v",p1.X)
+	fmt.Printf("p1: %#v",p1.Item.X)
+}
+```
+
+
+
+
+
+### String方法
+
+> 像Java那种每个类或者变量有toString()方法
+>
+> Go里面提供了类似的方法
+
+
+
+只要一个结构体或者type实现了String方法，当我们使用fmt.Println()打印时，我们即使用我们的String方法。
+
+实际上，我们实现了String方法，即是实现了fmt包下的Stringer接口
+
+
+
+
+
+> go vet
+
+
+
+go vet是一个代码静态检查的工具，帮助我们在编译和运行期间检查bug
+
+> 下面代码在vscode和goland中都会警告
+>
+> 产生了递归调用
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+
+}
+
+type Key byte
+
+// go's version enum
+const (
+	Jade Key = iota + 1
+	copper
+	crystal
+)
+
+// Implement fmt.Stringer interface
+func (k Key) String() string {
+	switch k {
+	case Jade:
+		return "Jade"
+	case copper:
+		return "copper"
+	case crystal:
+		return "crystal"
+	}
+	// return fmt.Sprintf("<Key %v>", k)
+	// 递归调用
+	return fmt.Sprintf("<Key %s>", k)
+}
+```
+
+我们也可以在goland中手动执行 go vet
+
+
+
+![](./image/3.png)
+
+
+
+![](./image/4.png)
+
+
+
+当我们运行 go test后，他会自动运行go vet
+
+
+
+
+
+### 类型断言、type switch
+
+> var i any == var i interface{}
+>
+> 类型断言是什么
+>
+> i = "ss"
+>
+> i.(string)
+>
+> 
+
+
+
+### panic
+
+> 为什么要对panic进行recover()
+>
+> 因为panic会终止程序的运行
+
+example
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+)
+
+func main() {
+	fmt.Println(safeDiv(1, 0))
+	fmt.Println("hello")
+}
+
+func safeDiv(a, b int) (int, error) {
+	defer func() {
+		if e := recover(); e != nil {
+			log.Println("Error", e)
+		}
+	}()
+	return a / b, nil
+}
+func div(a, b int) int {
+	return a / b
+}
+
+```
+
+
+
+
+
+
+
+## 第三天
+
+- 分配工作
+  - 使用 goroutines & channels
+  - 使用 sync 包来协调工作
+- 超时和取消
+  - 使用select选择多个channel
+  - 使用上下文进行超时和取消
+  - 标准库对上下文的支持
+
+
+
+
+
+> go runtime 不会等待goroutine，除了main
+
+> goroutine一旦开始你就无法访问它，它没有一个全局的id，像进程pid那样我们能kill掉
+
+
+
+
+
+### channel语义
+
+> send 和 receive将会阻塞
+>
+> 发送者将会一直阻塞，直到有人接收，
+>
+> 接收者将会一直阻塞，知道有人发送
+
+> received from a closed channel will return zero value without blocking
+>
+
+> 我们将会收到零值从一个关闭的channel，这个零值指的是channel的类型
+
+> send to a closed channel will panic
+
+> closing a closed channel will panic
+
+> send/receive to a nil channel will block forever
+
+> channel不是队列
+
+
+
+
+
+> 我们可以命名一个有方向的channel
