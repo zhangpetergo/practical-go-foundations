@@ -518,8 +518,65 @@ func div(a, b int) int {
 
 > channel不是队列
 
-
+> Buffered channel has cap(ch) non-blocking sends
+>
 
 
 
 > 我们可以命名一个有方向的channel
+
+
+
+> sync.WaitGroup()
+>
+> 使用这个，我们只关心一些事情是否完成，而不关心中间结果
+
+
+
+我们可以使用race detector，检测代码中的数据竞争
+
+```
+go run -race .\day3\counter\counter.go
+```
+
+![](./image/5.png)
+
+
+
+
+
+我们不在运行时启用race检测的原因是，race会降低性能
+
+
+
+> sync.Mutex
+
+
+
+
+
+两个问题
+
+> 数据的同步问题
+>
+> 解决数据的共享问题
+>
+> 
+>
+> 编排问题(orchestration)
+>
+> 解决数据完成的通知问题
+>
+> 
+
+
+
+
+
+context
+
+> example
+>
+> 网站
+>
+> 当我们登录时，会将ID记录在context中，以后所有的活动都会被这个ID跟踪
